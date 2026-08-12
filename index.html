@@ -173,19 +173,44 @@
     color:#F1EDE4; font-size:13px; letter-spacing:.08em; cursor:pointer; pointer-events:auto;
   }
 
-  .gc-hscroll{
-    display:none; margin-top:16px; gap:8px; overflow-x:auto; overflow-y:hidden;
-    -webkit-overflow-scrolling:touch; padding-bottom:4px;
-    touch-action:pan-x;
-  }
-  .gc-hscroll.open{ display:flex; }
-  .gc-hscroll div{ flex:0 0 auto; width:140px; height:190px; }
-
-  .gallery-collage div, .gc-hscroll div{
+  .gallery-collage div{
     background:var(--bg-soft); border:1px solid var(--hair);
     display:flex; align-items:center; justify-content:center;
     font-size:10px; color:#b3ab90; letter-spacing:.05em;
   }
+
+  /* ---------- Gallery lightbox ---------- */
+  #lightbox{
+    display:none; position:fixed; inset:0; z-index:90;
+    background:rgba(20,22,17,0.94);
+    align-items:center; justify-content:center;
+  }
+  #lightbox.open{ display:flex; }
+  #lightbox .lb-track{
+    display:flex; width:100%; height:70vh;
+    transition:transform .3s ease;
+    touch-action:pan-x;
+  }
+  #lightbox .lb-slide{
+    flex:0 0 100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    color:#B9B29B; font-size:12px; letter-spacing:.05em;
+  }
+  #lightbox .lb-close{
+    position:absolute; top:22px; right:22px; z-index:91;
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(255,255,255,0.12); color:#F1EDE4;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; pointer-events:auto;
+  }
+  #lightbox .lb-dots{
+    position:absolute; bottom:26px; left:0; right:0;
+    display:flex; justify-content:center; gap:6px;
+  }
+  #lightbox .lb-dots span{
+    width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.35);
+  }
+  #lightbox .lb-dots span.active{ background:#F1EDE4; }
 
   /* ---------- Save the date ---------- */
   #std .calendar{
@@ -402,18 +427,25 @@
 
       <div class="gc-more">
         PHOTO
-        <div class="more-overlay" id="moreOverlay" onclick="toggleGallery()">more +</div>
-      </div>
-
-      <div class="gc-hscroll" id="galleryHscroll">
-        <div>PHOTO</div>
-        <div>PHOTO</div>
-        <div>PHOTO</div>
-        <div>PHOTO</div>
+        <div class="more-overlay" id="moreOverlay" onclick="openLightbox(0)">more +</div>
       </div>
     </div>
-    <p class="placeholder-note">실제 사진으로 교체 예정 (6장 노출, 6번째에서 더보기)</p>
+    <p class="placeholder-note">실제 사진으로 교체 예정 (6장 노출, 6번째에서 팝업 슬라이드)</p>
   </section>
+
+  <div id="lightbox">
+    <div class="lb-close" onclick="closeLightbox()">✕</div>
+    <div class="lb-track" id="lbTrack">
+      <div class="lb-slide">PHOTO 1</div>
+      <div class="lb-slide">PHOTO 2</div>
+      <div class="lb-slide">PHOTO 3</div>
+      <div class="lb-slide">PHOTO 4</div>
+      <div class="lb-slide">PHOTO 5</div>
+      <div class="lb-slide">PHOTO 6</div>
+      <div class="lb-slide">PHOTO 7</div>
+    </div>
+    <div class="lb-dots" id="lbDots"></div>
+  </div>
 
   <!-- SAVE THE DATE -->
   <section id="std">
@@ -606,13 +638,42 @@ function downloadIcs(){
 }
 
 /* ---------- accordion ---------- */
-/* ---------- gallery more (horizontal scroll) ---------- */
-function toggleGallery(){
-  const extra = document.getElementById('galleryHscroll');
-  const overlay = document.getElementById('moreOverlay');
-  const isOpen = extra.classList.toggle('open');
-  overlay.textContent = isOpen ? 'close' : 'more +';
+/* ---------- gallery lightbox (팝업 + 스와이프 슬라이드) ---------- */
+const lbTrack = document.getElementById('lbTrack');
+const lbDotsWrap = document.getElementById('lbDots');
+const lbSlideCount = document.querySelectorAll('.lb-slide').length;
+let lbIndex = 0;
+
+for(let i=0; i<lbSlideCount; i++){
+  const dot = document.createElement('span');
+  if(i===0) dot.classList.add('active');
+  lbDotsWrap.appendChild(dot);
 }
+
+function renderLightbox(){
+  lbTrack.style.transform = 'translateX(' + (-lbIndex * 100) + '%)';
+  document.querySelectorAll('.lb-dots span').forEach((d, i) => {
+    d.classList.toggle('active', i === lbIndex);
+  });
+}
+
+function openLightbox(startIndex){
+  lbIndex = startIndex || 0;
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+let lbTouchStartX = 0;
+lbTrack.addEventListener('touchstart', e => { lbTouchStartX = e.touches[0].clientX; }, { passive:true });
+lbTrack.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].clientX - lbTouchStartX;
+  if(diff < -40 && lbIndex < lbSlideCount - 1) lbIndex++;
+  else if(diff > 40 && lbIndex > 0) lbIndex--;
+  renderLightbox();
+});
 
 function toggleAcc(id, btn){
   const el = document.getElementById(id);
