@@ -88,16 +88,10 @@
     background:radial-gradient(ellipse at 50% 40%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.06) 100%);
   }
   #cover > *{ position:relative; z-index:1; }
-  #cover .mount{
-    background:#fff;
-    padding:14px 14px 20px;
-    box-shadow:0 6px 18px rgba(0,0,0,0.10);
-  }
-  #cover .mount-photo{
-    width:150px; height:200px;
-    background:var(--bg-soft) url('COVER_PHOTO_URL') center/cover no-repeat;
-    display:flex; align-items:center; justify-content:center;
-    font-size:10px; color:#b3ab90; letter-spacing:.05em;
+  #cover .polaroid{
+    width:190px; height:auto;
+    display:block; margin:0 auto;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,0.12));
   }
   #cover .script-names{
     font-family:'Great Vibes', cursive;
@@ -156,19 +150,38 @@
     margin-top:22px;
   }
 
-  /* ---------- Gallery (비정형 콜라주, 여백 강조) ---------- */
+  /* ---------- Gallery (첨부 레이아웃 기준) ---------- */
   #gallery{ padding-left:16px; padding-right:16px; }
   .gallery-collage{ margin-top:30px; }
-  .gc-row1{
-    display:flex; justify-content:center; gap:8px;
+
+  .gc-block1{ width:214px; height:177px; margin:0 auto; }
+
+  .gc-block2{ position:relative; width:323px; height:272px; margin:26px auto 0; }
+  .gc-block2 .g2a{ position:absolute; left:0; top:0; width:119px; height:153px; }
+  .gc-block2 .g2b{ position:absolute; left:204px; top:119px; width:119px; height:153px; }
+
+  .gc-block3{ position:relative; width:321px; height:204px; margin:24px auto 0; }
+  .gc-block3 .g3a{ position:absolute; left:0; top:0; width:179px; height:204px; }
+  .gc-block3 .g3b{ position:absolute; left:241px; top:70px; width:80px; height:134px; }
+
+  .gc-more{
+    width:204px; height:177px; margin:71px auto 0; position:relative; overflow:hidden;
   }
-  .gc-row1 .a{ width:42%; height:220px; }
-  .gc-row1 .b{ width:24%; height:220px; }
-  .gc-spacer{ height:70px; }
-  .gc-row2{ position:relative; height:280px; }
-  .gc-row2 .c{ position:absolute; right:2%; top:0; width:40%; height:230px; }
-  .gc-row2 .d{ position:absolute; left:8%; top:120px; width:28%; height:150px; }
-  .gallery-collage div{
+  .gc-more .more-overlay{
+    position:absolute; inset:0; background:rgba(34,39,31,0.5);
+    display:flex; align-items:center; justify-content:center;
+    color:#F1EDE4; font-size:13px; letter-spacing:.08em; cursor:pointer; pointer-events:auto;
+  }
+
+  .gc-hscroll{
+    display:none; margin-top:16px; gap:8px; overflow-x:auto; overflow-y:hidden;
+    -webkit-overflow-scrolling:touch; padding-bottom:4px;
+    touch-action:pan-x;
+  }
+  .gc-hscroll.open{ display:flex; }
+  .gc-hscroll div{ flex:0 0 auto; width:140px; height:190px; }
+
+  .gallery-collage div, .gc-hscroll div{
     background:var(--bg-soft); border:1px solid var(--hair);
     display:flex; align-items:center; justify-content:center;
     font-size:10px; color:#b3ab90; letter-spacing:.05em;
@@ -297,7 +310,7 @@
   <section id="cover" class="in-view">
     <div class="texture-weave"></div>
     <div class="texture-vignette"></div>
-    <div class="mount"><div class="mount-photo">PHOTO</div></div>
+    <img class="polaroid" src="COVER_PHOTO_URL" alt="영민 & 다정">
     <h1 class="script-names">Youngmin <span class="amp">&amp;</span> Dajeong</h1>
     <div class="date">2026. 10. 10. SAT · AM 10:30</div>
   </section>
@@ -375,17 +388,31 @@
     <div class="eyebrow">MEMORIES</div>
     <div class="rule"></div>
     <div class="gallery-collage">
-      <div class="gc-row1">
-        <div class="a">PHOTO</div>
-        <div class="b">PHOTO</div>
+      <div class="gc-block1">PHOTO</div>
+
+      <div class="gc-block2">
+        <div class="g2a">PHOTO</div>
+        <div class="g2b">PHOTO</div>
       </div>
-      <div class="gc-spacer"></div>
-      <div class="gc-row2">
-        <div class="c">PHOTO</div>
-        <div class="d">PHOTO</div>
+
+      <div class="gc-block3">
+        <div class="g3a">PHOTO</div>
+        <div class="g3b">PHOTO</div>
+      </div>
+
+      <div class="gc-more">
+        PHOTO
+        <div class="more-overlay" id="moreOverlay" onclick="toggleGallery()">more +</div>
+      </div>
+
+      <div class="gc-hscroll" id="galleryHscroll">
+        <div>PHOTO</div>
+        <div>PHOTO</div>
+        <div>PHOTO</div>
+        <div>PHOTO</div>
       </div>
     </div>
-    <p class="placeholder-note">실제 사진으로 교체 예정</p>
+    <p class="placeholder-note">실제 사진으로 교체 예정 (6장 노출, 6번째에서 더보기)</p>
   </section>
 
   <!-- SAVE THE DATE -->
@@ -488,7 +515,7 @@
   <div class="toast" id="toast"></div>
 
 <!-- 네이버 클라우드 플랫폼에서 발급받은 Client ID로 YOUR_NCP_CLIENT_ID 부분을 교체하세요 -->
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=deamxzbs58&submodules=geocoder"></script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=ypv2nv8k13&submodules=geocoder"></script>
 <script>
 function initNaverMap(){
   if (typeof naver === 'undefined' || !naver.maps || !naver.maps.Service) {
@@ -579,6 +606,14 @@ function downloadIcs(){
 }
 
 /* ---------- accordion ---------- */
+/* ---------- gallery more (horizontal scroll) ---------- */
+function toggleGallery(){
+  const extra = document.getElementById('galleryHscroll');
+  const overlay = document.getElementById('moreOverlay');
+  const isOpen = extra.classList.toggle('open');
+  overlay.textContent = isOpen ? 'close' : 'more +';
+}
+
 function toggleAcc(id, btn){
   const el = document.getElementById(id);
   el.classList.toggle('open');
